@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json"> <meta name="theme-color" content="#7a1f2b"> <link rel="apple-touch-icon" href="/icons/icon-192.png">
+<title>Sign Up — Student Support Hub</title>
+<style>
+  :root { --maroon: #7a1f2b; --maroon-dark: #5e1620; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #f4f6f8; margin: 0; padding: 30px;
+         display: flex; align-items: center; justify-content: center; min-height: 100vh; box-sizing: border-box; color: #222; }
+  .card { background: #fff; max-width: 400px; width: 100%; padding: 34px 36px 40px; border-radius: 6px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.08); text-align: center; }
+  .card img { height: 60px; margin-bottom: 10px; }
+  .card h1 { font-size: 1.05rem; margin: 0 0 24px; letter-spacing: 0.5px; font-weight: 700; }
+  .field { text-align: left; margin-bottom: 14px; }
+  .field label { display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 5px; }
+  .field input { width: 100%; padding: 9px 10px; border: 1px solid #bbb; border-radius: 5px; font-size: 0.92rem; box-sizing: border-box; }
+  .field input:focus { outline: none; border-color: var(--maroon); }
+  .field .hint { font-size: 0.75rem; color: #888; margin-top: 4px; }
+  button { width: 100%; padding: 11px; border: none; border-radius: 6px; background: var(--maroon);
+           color: #fff; font-weight: 700; font-size: 0.95rem; cursor: pointer; margin-top: 8px; }
+  button:hover { background: var(--maroon-dark); }
+  .error { background: #fdecea; color: #b3261e; font-size: 0.85rem; padding: 8px 10px; border-radius: 5px; margin-bottom: 16px; }
+  .success { background: #eafaf1; color: #16a34a; font-size: 0.85rem; padding: 8px 10px; border-radius: 5px; margin-bottom: 16px; }
+  .login-link { display: block; margin-top: 18px; font-size: 0.85rem; color: var(--maroon); text-decoration: none; }
+  .login-link:hover { text-decoration: underline; }
+  footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid #eee; text-align: center; font-size: 0.75rem; color: #999; }
+</style>
+</head>
+<body>
+<div class="card">
+  <img th:src="@{/images/pnguot-logo.jpg}" src="/images/pnguot-logo.jpg" alt="PNGUOT logo">
+  <h1>STUDENT SIGN UP</h1>
+
+  <div id="formStatus"></div>
+
+  <form id="signupForm" onsubmit="return handleSignup(event)">
+    <div class="field">
+      <label for="fullName">Full name</label>
+      <input type="text" id="fullName" required autofocus>
+    </div>
+    <div class="field">
+      <label for="email">Student email</label>
+      <input type="email" id="email" required>
+      <div class="hint">Use your official PNGUOT student email address.</div>
+    </div>
+    <div class="field">
+      <label for="username">Username</label>
+      <input type="text" id="username" required>
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" required minlength="6">
+    </div>
+    <div class="field">
+      <label for="confirmPassword">Confirm password</label>
+      <input type="password" id="confirmPassword" required minlength="6">
+    </div>
+    <button type="submit">Create Account</button>
+  </form>
+
+  <a class="login-link" th:href="@{/login}" href="/login">Already have an account? Log in</a>
+
+  <footer>Papua New Guinea University of Technology — Student &amp; Staff Support Hub</footer>
+</div>
+
+<script>
+async function handleSignup(event) {
+  event.preventDefault();
+  const statusEl = document.getElementById('formStatus');
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+
+  if (password !== confirmPassword) {
+    statusEl.innerHTML = '<div class="error">Passwords do not match.</div>';
+    return false;
+  }
+
+  const body = {
+    fullName: document.getElementById('fullName').value,
+    email: document.getElementById('email').value,
+    username: document.getElementById('username').value,
+    password: password
+  };
+
+  const res = await fetch('/api/students/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (res.ok) {
+    window.location.href = '/login?registered=1';
+  } else {
+    const message = await res.text();
+    statusEl.innerHTML = '<div class="error">' + (message || 'Something went wrong. Please try again.') + '</div>';
+  }
+  return false;
+}
+</script>
+ <script>
+ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }
+ </script>
+</body>
+</html>

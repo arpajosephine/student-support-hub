@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json"> <meta name="theme-color" content="#7a1f2b"> <link rel="apple-touch-icon" href="/icons/icon-192.png">
+<title>Dashboard — Student Support Hub</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f4f6f8; --panel: #ffffff; --border: #e5e2e3;
+    --text: #222; --text-muted: #6b6b6b;
+    --maroon: #7a1f2b; --maroon-dark: #5e1620; --gold: #d9a441; --danger: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 26px 60px; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; border-bottom: 1px solid var(--border); }
+  .topbar .brand { display: flex; align-items: center; gap: 12px; }
+  .topbar img { height: 38px; border-radius: 6px; }
+  .topbar .brand-text .name { font-weight: 700; font-size: 0.95rem; }
+  .topbar .brand-text .sub { font-size: 0.78rem; color: var(--text-muted); }
+
+  .pill-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 999px;
+    font-weight: 700; font-size: 0.85rem; text-decoration: none; border: none; cursor: pointer; font-family: inherit;
+  }
+  .pill-btn.secondary { background: #fff; color: var(--maroon); border: 1px solid var(--maroon); }
+  .pill-btn.secondary:hover { background: var(--maroon); color: #fff; }
+  .pill-btn.ghost { background: #fff; color: var(--text); border: 1px solid var(--border); font-size: 0.8rem; padding: 8px 16px; }
+  .pill-btn.ghost:hover { border-color: var(--maroon); color: var(--maroon); }
+
+  .hero { padding: 40px 0 6px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--border);
+    border-radius: 999px; padding: 7px 16px; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 18px;
+  }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); display: inline-block; }
+  .hero h1 { font-size: 1.8rem; line-height: 1.15; margin: 0 0 22px; font-weight: 800; color: var(--maroon); }
+
+  .nav-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 40px 0 32px; }
+
+  .section h2 { font-size: 1.1rem; margin: 0 0 4px; font-weight: 800; }
+  .section p.sub { color: var(--text-muted); font-size: 0.88rem; margin: 0 0 18px; }
+
+  .panel { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; }
+  th { color: var(--text-muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.4px; background: #faf8f8; }
+  td { color: var(--text); }
+  tr[data-id] { cursor: pointer; }
+  tr[data-id]:hover td { color: var(--maroon); }
+  tr[data-id]:hover { background: #faf5f5; }
+
+  .emergency-list { list-style: none; margin: 0; padding: 0; font-size: 0.9rem; line-height: 2; }
+  .emergency-list li { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 4px 0; }
+  .emergency-list li:last-child { border-bottom: none; }
+  .caveat { font-size: 0.78rem; color: var(--maroon); margin-top: 14px; }
+
+  .contact-list { display: flex; flex-wrap: wrap; gap: 12px; }
+  .contact-chip {
+    display: inline-flex; align-items: center; gap: 8px; background: #faf8f8; border: 1px solid var(--border);
+    border-radius: 999px; padding: 8px 14px 8px 10px; text-decoration: none; color: var(--text); font-size: 0.85rem;
+  }
+  .contact-chip:hover { border-color: var(--maroon); }
+  .contact-chip .mail-icon {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--maroon); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0;
+  }
+  .contact-chip .role-tag { color: var(--text-muted); font-size: 0.75rem; }
+
+  #status { font-size: 0.85rem; min-height: 1.2em; margin-bottom: 12px; color: var(--text-muted); }
+
+  footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 0.78rem; color: var(--text-muted); }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 0 18px 40px; }
+    .hero h1 { font-size: 1.5rem; }
+    .nav-row { flex-direction: column; }
+    table, thead, tbody, th, td, tr { display: block; }
+    th { display: none; }
+    tr[data-id] { border-bottom: 1px solid var(--border); padding: 8px 0; }
+    td { border: none; padding: 2px 0; display: flex; justify-content: space-between; }
+    td::before { content: attr(data-label); color: var(--text-muted); font-size: 0.75rem; margin-right: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <img th:src="@{/images/pnguot-logo.jpg}" src="/images/pnguot-logo.jpg" alt="PNGUOT logo">
+      <div class="brand-text">
+        <div class="name">Papua New Guinea University of Technology</div>
+        <div class="sub">Student &amp; Staff Support Hub</div>
+      </div>
+    </div>
+    <a class="pill-btn ghost" th:href="@{/logout}" href="/logout">Log out</a>
+  </div>
+
+  <div class="hero">
+    <div class="badge"><span class="dot"></span> Logged in as <span th:text="${username}">counsellor1</span></div>
+    <h1>Case Dashboard</h1>
+    <div class="nav-row">
+      <a class="pill-btn secondary" th:href="@{/feedback}" href="/feedback">Feedback</a>
+      <a class="pill-btn secondary" th:href="@{/settings}" href="/settings">Settings</a>
+      <a class="pill-btn secondary" th:if="${isAdmin}" th:href="@{/admin/users}" href="/admin/users">Manage Users</a>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <h2>Cases</h2>
+    <p class="sub">Click a case to open it.</p>
+    <div class="panel">
+      <div id="status"></div>
+      <table id="requestsTable">
+        <thead>
+          <tr><th>Case #</th><th>Date</th><th>Reported @</th><th>Issue</th><th>Urgency</th><th>Priority</th><th>Status</th></tr>
+        </thead>
+        <tbody id="requestsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <h2>Issues Reported This Month</h2>
+    <p class="sub">Live count, grouped by issue category.</p>
+    <div class="panel">
+      <canvas id="issueChart" height="90"></canvas>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <h2>Contact</h2>
+    <p class="sub">Reach the rest of the support team directly by email.</p>
+    <div class="panel">
+      <div class="contact-list" id="contactList"></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <h2>Emergency Numbers</h2>
+    <p class="sub">For situations that need an immediate response.</p>
+    <div class="panel">
+      <ul class="emergency-list">
+        <li><span>Lae Metro Police</span><span>7090 3300</span></li>
+        <li><span>Unitech Security</span><span>473 4444/7493 0599/7721 9229</span></li>
+        <li><span>Lae Fire Service</span><span>110</span></li>
+        <li><span>Unitech Ambulance</span><span>473 4444/7493 0599/7577 9344</span></li>
+        <li><span>Ambulance (St John)</span><span>111</span></li>
+        <li><span>Unitech Housing</span><span>7215 3665/7118 4541</span></li>
+        <li><span>Lifeline PNG (counselling)</span><span>+675 326 0011</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>Papua New Guinea University of Technology — Student &amp; Staff Support Hub</footer>
+
+</div>
+
+<script>
+const API = '/api/support-requests';
+
+const CAMPUS_LABELS = {
+  TARAKA: 'Taraka Campus (Main)', BULOLO: 'Bulolo University College', BUMBU: 'Bumbu Campus',
+  KUNDIAWA: 'Kundiawa Campus', TFTC: 'Timber and Forestry College (TFTC)', OKARI: 'Okari Campus', ONLINE: 'Online / Distance'
+};
+const ISSUE_LABELS = {
+  MENTAL_HEALTH: 'Mental Health', ANXIETY: 'Anxiety', DEPRESSION: 'Depression', ABUSE: 'Abuse',
+  BULLYING: 'Bullying', FIGHTING: 'Fighting', ACADEMIC_STRESS: 'Academic Stress', OTHER: 'Other'
+};
+
+function showStatus(msg, isError) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.style.color = isError ? '#dc2626' : '#6b6b6b';
+}
+
+async function loadRequests() {
+  const res = await fetch(API);
+  const data = await res.json();
+  const body = document.getElementById('requestsBody');
+  body.innerHTML = '';
+  data.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = r.id;
+    tr.innerHTML = `<td data-label="Case #">${r.caseNumber}</td><td data-label="Date">${r.dateSubmitted ?? ''}</td>
+      <td data-label="Reported @">${CAMPUS_LABELS[r.reportedAt] ?? r.reportedAt ?? ''}</td>
+      <td data-label="Issue">${ISSUE_LABELS[r.issueCategory] ?? r.issueCategory ?? ''}</td>
+      <td data-label="Urgency">${r.urgencyLevel ?? ''}</td><td data-label="Priority">${r.priorityLevel ?? ''}</td><td data-label="Status">${r.status ?? ''}</td>`;
+    tr.onclick = () => { window.location.href = '/support-request-form?id=' + r.id; };
+    body.appendChild(tr);
+  });
+  if (data.length === 0) {
+    showStatus('No cases yet.');
+  }
+}
+
+async function loadChart() {
+  const res = await fetch(`${API}/stats/monthly-issues`);
+  const counts = await res.json();
+  const labels = Object.keys(counts).map(k => ISSUE_LABELS[k] ?? k);
+  const values = Object.values(counts);
+
+  new Chart(document.getElementById('issueChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Cases this month', data: values, backgroundColor: '#7a1f2b', borderRadius: 4 }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0, color: '#6b6b6b' }, grid: { color: '#e5e2e3' } },
+        x: { ticks: { color: '#6b6b6b' }, grid: { color: '#e5e2e3' } }
+      }
+    }
+  });
+}
+
+async function loadContacts() {
+  const res = await fetch('/api/users/staff-contacts');
+  if (!res.ok) return;
+  const data = await res.json();
+  const list = document.getElementById('contactList');
+  list.innerHTML = '';
+  data.forEach(c => {
+    const a = document.createElement('a');
+    a.className = 'contact-chip';
+    a.href = 'mailto:' + c.email;
+    a.innerHTML = `<span class="mail-icon">✉</span> ${c.fullName} <span class="role-tag">(${c.role})</span>`;
+    list.appendChild(a);
+  });
+  if (data.length === 0) {
+    list.innerHTML = '<span style="color:#6b6b6b; font-size:0.85rem;">No other staff contacts yet.</span>';
+  }
+}
+
+loadRequests();
+loadChart();
+loadContacts();
+</script>
+ <script>
+ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }
+ </script>
+</body>
+</html>

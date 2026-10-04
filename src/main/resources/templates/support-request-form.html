@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json"> <meta name="theme-color" content="#7a1f2b"> <link rel="apple-touch-icon" href="/icons/icon-192.png">
+<title>Student Support Request Form</title>
+<style>
+  :root { --maroon: #7a1f2b; --maroon-dark: #5e1620; --gold: #ffd166; --notes-bg: #eef3f8; --notes-border: #4a7ba6; }
+
+  body { font-family: Arial, Helvetica, sans-serif; background: #f4f6f8; margin: 0; padding: 30px; color: #222; }
+  .card { background: #fff; max-width: 760px; margin: 0 auto; padding: 30px 44px 44px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+
+  /* Header: same as the student form, with logout + who's logged in */
+  .header { text-align: center; padding-bottom: 18px; margin-bottom: 26px; position: relative; }
+  .header img { height: 64px; margin-bottom: 10px; }
+  .header h1 { font-size: 1.05rem; margin: 0; letter-spacing: 0.5px; font-weight: 700; }
+  .header .subtitle { font-size: 0.8rem; color: #666; margin: 6px 0 0; }
+  .logout-link { position: absolute; top: 0; right: 0; font-size: 0.8rem; color: var(--maroon); text-decoration: none; }
+  .logout-link:hover { text-decoration: underline; }
+
+  /* Compact plain-text case summary at the top — read-only, shows exactly what the student submitted */
+  .case-summary { font-size: 0.94rem; color: #333; margin-bottom: 22px; line-height: 2; }
+  .case-summary .sep { color: #bbb; margin: 0 8px; }
+  .case-summary .value { font-weight: 600; color: #222; }
+
+  /* Yellow description box — the student's submitted description, identical style to the student form */
+  .description-field { margin-bottom: 22px; }
+  .description-field .desc-label {
+    display: inline-block; background: var(--gold); font-weight: 700; font-size: 0.9rem;
+    padding: 6px 14px; border-radius: 3px 3px 0 0; margin-bottom: 0;
+  }
+  .description-field textarea {
+    display: block; width: 100%; min-height: 180px; resize: vertical; box-sizing: border-box;
+    background: #ffe9a8; border: none; border-radius: 0 4px 4px 4px; padding: 14px;
+    font-family: inherit; font-size: 0.92rem; color: #222;
+  }
+  .description-field textarea:focus { outline: 2px solid var(--gold); }
+
+  /* Boxed action buttons — same style as the student form, three actions now */
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-top: 10px; }
+  .action-grid button {
+    padding: 10px 14px; border: 1px solid var(--maroon); border-radius: 6px;
+    background: #fff; color: var(--maroon); font-weight: 600; font-size: 0.9rem; cursor: pointer; text-align: left;
+    font-family: inherit;
+  }
+  .action-grid button:hover { background: var(--maroon); color: #fff; }
+  #saveBtn { background: var(--maroon); color: #fff; }
+  #saveBtn:hover { background: var(--maroon-dark); }
+
+  /* Request Schedule and Follow Up panels — small utility boxes, same shape as before */
+  .panel { display: none; margin-top: 16px; padding: 14px 16px; background: #f7f2f2; border-left: 4px solid var(--maroon); border-radius: 4px; }
+  .panel.open { display: block; }
+  .panel label { display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 5px; }
+  .panel input { width: 100%; padding: 7px 9px; border: 1px solid #bbb; border-radius: 5px; box-sizing: border-box; margin-bottom: 10px; }
+  .panel button { padding: 7px 16px; border: none; border-radius: 5px; background: #10b981; color: #fff; cursor: pointer; font-size: 0.85rem; }
+
+  /* Session Notes — its own labelled container, echoing the description box's label-tab style */
+  .notes-field { margin-top: 16px; }
+  .notes-field.open { display: block; }
+  .notes-field:not(.open) { display: none; }
+  .notes-field .notes-label {
+    display: inline-block; background: var(--notes-border); color: #fff; font-weight: 700; font-size: 0.9rem;
+    padding: 6px 14px; border-radius: 3px 3px 0 0;
+  }
+  .notes-field textarea {
+    display: block; width: 100%; min-height: 120px; resize: vertical; box-sizing: border-box;
+    background: var(--notes-bg); border: 1px solid var(--notes-border); border-top: none;
+    border-radius: 0 4px 4px 4px; padding: 12px; font-family: inherit; font-size: 0.92rem; color: #222;
+  }
+  .notes-field textarea:focus { outline: 2px solid var(--notes-border); }
+  .notes-field button {
+    margin-top: 10px; padding: 7px 16px; border: none; border-radius: 5px;
+    background: #10b981; color: #fff; cursor: pointer; font-size: 0.85rem;
+  }
+
+  #status { margin-top: 16px; font-size: 0.88rem; min-height: 1.2em; }
+
+  /* Case table — counsellor-only, drives loading a case into the form above */
+  table { width: 100%; border-collapse: collapse; margin-top: 28px; font-size: 0.82rem; }
+  th, td { border: 1px solid #e2e2e2; padding: 7px; text-align: left; }
+  th { background: #f0f2f5; }
+  tr[data-id] { cursor: pointer; }
+  tr[data-id]:hover { background: #faf5f5; }
+
+  @media (max-width: 480px) {
+    body { padding: 12px; }
+    .card { padding: 20px 18px 28px; }
+    .action-grid { grid-template-columns: 1fr; }
+    .case-summary { line-height: 2.2; }
+    .logout-link { position: static; display: block; margin-bottom: 10px; text-align: right; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="header">
+    <a class="logout-link" th:href="@{/logout}" href="/logout">Log out</a>
+    <img th:src="@{/images/pnguot-logo.jpg}" src="/images/pnguot-logo.jpg" alt="PNGUOT logo">
+    <h1>STUDENT SUPPORT REQUEST FORM</h1>
+    <p class="subtitle">Logged in as <span th:text="${username}">counsellor1</span> — <a th:href="@{/dashboard}" href="/dashboard" style="color:var(--maroon);">Back to Dashboard</a></p>
+  </div>
+
+  <input type="hidden" id="requestId">
+
+  <div class="case-summary">
+    Case ID: <span class="value" id="caseNumberDisplay">assigned automatically on submit</span>
+    <span class="sep">|</span>
+    Date: <span class="value" id="dateDisplay">—</span>
+    <span class="sep">|</span>
+    Reported @: <span class="value" id="reportedAtDisplay">—</span>
+    <span class="sep">|</span>
+    Issue: <span class="value" id="issueDisplay">—</span>
+    <span class="sep">|</span>
+    Urgency: <span class="value" id="urgencyDisplay">—</span>
+    <span class="sep">|</span>
+    Priority: <span class="value" id="priorityDisplay">—</span>
+  </div>
+
+  <!-- Holds the actual values behind the scenes so Edit/Follow Up/Notes still work — not shown to the counsellor -->
+  <input type="hidden" id="dateSubmitted">
+  <input type="hidden" id="reportedAt">
+  <input type="hidden" id="issueCategory">
+  <input type="hidden" id="urgencyLevel">
+  <input type="hidden" id="priorityLevel">
+
+  <!-- Description box: read-only, shows exactly what the student wrote -->
+  <div class="description-field">
+    <label class="desc-label" for="description">Description</label>
+    <textarea id="description" readonly placeholder="Select a case below to see the student's description..."></textarea>
+  </div>
+
+  <div class="action-grid">
+    <button type="button" id="saveBtn" onclick="saveChanges()">Save</button>
+    <button type="button" id="followUpToggle" onclick="togglePanel('followUpPanel')">Follow Up</button>
+
+    <button type="button" id="cancelBtn" onclick="cancelRequest()">Cancel</button>
+    <button type="button" id="notesToggle" onclick="togglePanel('notesPanel')">Session Notes</button>
+  </div>
+
+  <div class="panel" id="followUpPanel">
+    <p style="font-size:0.85rem; margin-top:0;">Mark this case as needing a follow-up session, and set when it should happen.</p>
+    <label for="scheduleDate">Follow-up date &amp; time</label>
+    <input type="datetime-local" id="scheduleDate">
+    <button type="button" onclick="scheduleFollowUp()">Confirm Follow-up</button>
+  </div>
+
+  <!-- Session Notes: its own dedicated container for typing counsellor notes -->
+  <div class="notes-field" id="notesPanel">
+    <label class="notes-label" for="sessionNotes">Session Notes</label>
+    <textarea id="sessionNotes" placeholder="Counsellor notes after a session..."></textarea>
+    <button type="button" onclick="saveNotes()">Save Notes</button>
+  </div>
+
+  <div id="status"></div>
+  <footer style="margin-top:34px; padding-top:16px; border-top:1px solid #eee; text-align:center; font-size:0.75rem; color:#999;">Papua New Guinea University of Technology — Student &amp; Staff Support Hub</footer>
+</div>
+
+<script>
+const API = '/api/support-requests';
+
+const CAMPUS_LABELS = {
+  TARAKA: 'Taraka Campus (Main)', BULOLO: 'Bulolo University College', BUMBU: 'Bumbu Campus',
+  KUNDIAWA: 'Kundiawa Campus', TFTC: 'Timber and Forestry College (TFTC)', OKARI: 'Okari Campus', ONLINE: 'Online / Distance'
+};
+const ISSUE_LABELS = {
+  MENTAL_HEALTH: 'Mental Health', ANXIETY: 'Anxiety', DEPRESSION: 'Depression', ABUSE: 'Abuse',
+  BULLYING: 'Bullying', FIGHTING: 'Fighting', ACADEMIC_STRESS: 'Academic Stress', OTHER: 'Other'
+};
+const LEVEL_LABELS = { LOW: 'Low', MEDIUM: 'Medium', HIGH: 'High', CRITICAL: 'Critical' };
+
+function showStatus(msg, isError) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.style.color = isError ? '#dc2626' : '#16a34a';
+}
+
+function togglePanel(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// Loads the case whose id is in the URL, e.g. /support-request-form?id=7
+async function loadCaseFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) {
+    showStatus('No case selected — go back to the Dashboard and click a case.', true);
+    return;
+  }
+  const res = await fetch(`${API}/${id}`);
+  if (!res.ok) {
+    showStatus('Could not load that case.', true);
+    return;
+  }
+  const r = await res.json();
+  loadIntoForm(r);
+}
+
+function loadIntoForm(r) {
+  document.getElementById('requestId').value = r.id;
+  document.getElementById('caseNumberDisplay').textContent = r.caseNumber;
+  document.getElementById('dateSubmitted').value = r.dateSubmitted;
+  document.getElementById('reportedAt').value = r.reportedAt ?? '';
+  document.getElementById('description').value = r.description ?? '';
+  document.getElementById('issueCategory').value = r.issueCategory ?? 'OTHER';
+  document.getElementById('urgencyLevel').value = r.urgencyLevel ?? 'LOW';
+  document.getElementById('priorityLevel').value = r.priorityLevel ?? 'LOW';
+  document.getElementById('sessionNotes').value = r.sessionNotes ?? '';
+
+  document.getElementById('dateDisplay').textContent = r.dateSubmitted ?? '—';
+  document.getElementById('reportedAtDisplay').textContent = CAMPUS_LABELS[r.reportedAt] ?? r.reportedAt ?? '—';
+  document.getElementById('issueDisplay').textContent = ISSUE_LABELS[r.issueCategory] ?? r.issueCategory ?? '—';
+  document.getElementById('urgencyDisplay').textContent = LEVEL_LABELS[r.urgencyLevel] ?? r.urgencyLevel ?? '—';
+  document.getElementById('priorityDisplay').textContent = LEVEL_LABELS[r.priorityLevel] ?? r.priorityLevel ?? '—';
+
+  if (r.requestedScheduleDate) {
+    document.getElementById('scheduleDate').value = r.requestedScheduleDate.substring(0,16);
+  }
+  showStatus('Loaded ' + r.caseNumber + '.');
+}
+
+async function saveChanges() {
+  const id = document.getElementById('requestId').value;
+  if (!id) { showStatus('No case loaded.', true); return; }
+  const body = {
+    reportedAt: document.getElementById('reportedAt').value,
+    description: document.getElementById('description').value,
+    issueCategory: document.getElementById('issueCategory').value,
+    urgencyLevel: document.getElementById('urgencyLevel').value,
+    priorityLevel: document.getElementById('priorityLevel').value
+  };
+  await fetch(`${API}/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  showStatus('Changes saved.');
+}
+
+async function cancelRequest() {
+  const id = document.getElementById('requestId').value;
+  if (!id) { showStatus('No case loaded.', true); return; }
+  await fetch(`${API}/${id}/cancel`, { method: 'PATCH' });
+  showStatus('Case cancelled.');
+}
+
+async function scheduleFollowUp() {
+  const id = document.getElementById('requestId').value;
+  const scheduleDate = document.getElementById('scheduleDate').value;
+  if (!id || !scheduleDate) { showStatus('Pick a date/time first.', true); return; }
+  await fetch(`${API}/${id}/schedule`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ scheduleDate: scheduleDate + ':00' }) });
+  showStatus('Follow-up scheduled.');
+}
+
+async function saveNotes() {
+  const id = document.getElementById('requestId').value;
+  const notes = document.getElementById('sessionNotes').value;
+  if (!id) { showStatus('No case loaded.', true); return; }
+  await fetch(`${API}/${id}/notes`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ notes }) });
+  showStatus('Session notes saved.');
+}
+
+loadCaseFromUrl();
+</script>
+ <script>
+ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }
+ </script>
+</body>
+</html>

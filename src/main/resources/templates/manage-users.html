@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json"> <meta name="theme-color" content="#7a1f2b"> <link rel="apple-touch-icon" href="/icons/icon-192.png">
+<title>Manage Users — Student Support Hub</title>
+<style>
+  :root { --maroon: #7a1f2b; --maroon-dark: #5e1620; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #f4f6f8; margin: 0; padding: 30px; color: #222; }
+  .card { background: #fff; max-width: 760px; margin: 0 auto; padding: 30px 40px 40px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+  .header { text-align: center; padding-bottom: 18px; margin-bottom: 26px; position: relative; }
+  .header h1 { font-size: 1.05rem; margin: 0; letter-spacing: 0.5px; font-weight: 700; }
+  .header .subtitle { font-size: 0.8rem; color: #666; margin: 6px 0 0; }
+  .logout-link { position: absolute; top: 0; right: 0; font-size: 0.8rem; color: var(--maroon); text-decoration: none; }
+  .back-link { display: inline-block; margin-bottom: 18px; font-size: 0.85rem; color: var(--maroon); text-decoration: none; }
+  section { margin-bottom: 30px; }
+  section h2 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color: #555; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { border: 1px solid #e2e2e2; padding: 8px; text-align: left; }
+  th { background: #f0f2f5; }
+  .status-active { color: #16a34a; font-weight: 600; }
+  .status-inactive { color: #dc2626; font-weight: 600; }
+  button.small { padding: 5px 10px; font-size: 0.78rem; border: 1px solid var(--maroon); border-radius: 5px; background: #fff; color: var(--maroon); cursor: pointer; }
+  button.small:hover { background: var(--maroon); color: #fff; }
+  .new-user-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+  .new-user-form input, .new-user-form select { padding: 8px 9px; border: 1px solid #bbb; border-radius: 5px; font-size: 0.88rem; box-sizing: border-box; font-family: inherit; }
+  .new-user-form button { grid-column: span 2; padding: 9px; border: none; border-radius: 6px; background: var(--maroon); color: #fff; font-weight: 700; cursor: pointer; }
+  .new-user-form button:hover { background: var(--maroon-dark); }
+  #status { margin-top: 12px; font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<div class="card">
+  <a class="back-link" th:href="@{/dashboard}" href="/dashboard">&larr; Back to Dashboard</a>
+  <div class="header">
+    <a class="logout-link" th:href="@{/logout}" href="/logout">Log out</a>
+    <h1>MANAGE USERS</h1>
+    <p class="subtitle">Logged in as <span th:text="${username}">admin1</span></p>
+  </div>
+
+  <section>
+    <h2>All Accounts</h2>
+    <table id="usersTable">
+      <thead>
+        <tr><th>Full Name</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody id="usersBody"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Create New Account</h2>
+    <div class="new-user-form">
+      <input type="text" id="fullName" placeholder="Full name">
+      <input type="text" id="username" placeholder="Username">
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Temporary password">
+      <select id="role">
+        <option value="COUNSELLOR">Counsellor</option>
+        <option value="ADMIN">Admin</option>
+      </select>
+      <button type="button" onclick="createUser()">Create Account</button>
+    </div>
+    <div id="status"></div>
+  </section>
+  <footer style="margin-top:34px; padding-top:16px; border-top:1px solid #eee; text-align:center; font-size:0.75rem; color:#999;">Papua New Guinea University of Technology — Student &amp; Staff Support Hub</footer>
+</div>
+
+<script>
+async function loadUsers() {
+  const res = await fetch('/api/users');
+  const data = await res.json();
+  const body = document.getElementById('usersBody');
+  body.innerHTML = '';
+  data.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${u.fullName ?? ''}</td><td>${u.username}</td><td>${u.email}</td><td>${u.role}</td>
+      <td class="${u.active ? 'status-active' : 'status-inactive'}">${u.active ? 'Active' : 'Deactivated'}</td>
+      <td><button class="small" onclick="toggleActive(${u.id}, ${!u.active})">${u.active ? 'Deactivate' : 'Activate'}</button></td>`;
+    body.appendChild(tr);
+  });
+}
+
+async function toggleActive(id, makeActive) {
+  await fetch(`/api/users/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ active: makeActive })
+  });
+  loadUsers();
+}
+
+async function createUser() {
+  const body = {
+    fullName: document.getElementById('fullName').value,
+    username: document.getElementById('username').value,
+    email: document.getElementById('email').value,
+    password: document.getElementById('password').value,
+    role: document.getElementById('role').value
+  };
+  const status = document.getElementById('status');
+  const res = await fetch('/api/users/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (res.ok) {
+    status.textContent = 'Account created.';
+    status.style.color = '#16a34a';
+    document.getElementById('fullName').value = '';
+    document.getElementById('username').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+    loadUsers();
+  } else {
+    status.textContent = 'Could not create account — check the details and try again.';
+    status.style.color = '#dc2626';
+  }
+}
+
+loadUsers();
+</script>
+ <script>
+ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }
+ </script>
+</body>
+</html>

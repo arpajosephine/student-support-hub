@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json"> <meta name="theme-color" content="#7a1f2b"> <link rel="apple-touch-icon" href="/icons/icon-192.png">
+<title>Student Support Request Form</title>
+<style>
+  :root { --maroon: #7a1f2b; --maroon-dark: #5e1620; --gold: #ffd166; }
+
+  body { font-family: Arial, Helvetica, sans-serif; background: #f4f6f8; margin: 0; padding: 30px; color: #222; }
+  .card { background: #fff; max-width: 760px; margin: 0 auto; padding: 30px 44px 44px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+
+  .header { text-align: center; padding-bottom: 18px; margin-bottom: 26px; position: relative; }
+  .header img { height: 64px; margin-bottom: 10px; }
+  .header h1 { font-size: 1.05rem; margin: 0; letter-spacing: 0.5px; font-weight: 700; }
+  .logout-link { position: absolute; top: 0; right: 0; font-size: 0.8rem; color: var(--maroon); text-decoration: none; }
+  .logout-link:hover { text-decoration: underline; }
+
+  .case-box { background: #d9d9d9; padding: 16px 18px; margin-bottom: 22px; border-radius: 2px; }
+  .case-box .row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; font-size: 0.92rem; }
+  .case-box .row:last-child { margin-bottom: 0; }
+  .case-box .row label { font-weight: 700; min-width: 92px; }
+  .case-box .row input, .case-box .row select {
+    flex: 1; border: none; background: transparent; border-bottom: 1px solid rgba(0,0,0,0.35);
+    padding: 2px 4px; font-size: 0.92rem; font-family: inherit; color: #222;
+  }
+  .case-box .row input:focus, .case-box .row select:focus { outline: none; border-bottom-color: var(--maroon); }
+
+  .description-field { margin-bottom: 22px; }
+  .description-field .desc-label {
+    display: inline-block; background: var(--gold); font-weight: 700; font-size: 0.9rem;
+    padding: 6px 14px; border-radius: 3px 3px 0 0; margin-bottom: 0;
+  }
+  .description-field textarea {
+    display: block; width: 100%; min-height: 220px; resize: vertical; box-sizing: border-box;
+    background: #ffe9a8; border: none; border-radius: 0 4px 4px 4px; padding: 14px;
+    font-family: inherit; font-size: 0.92rem; color: #222;
+  }
+  .description-field textarea:focus { outline: 2px solid var(--gold); }
+
+  /* Four actions: Edit, Save & Submit, Cancel, Request Schedule — no counsellor-only tools here */
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-top: 10px; }
+  .action-grid button {
+    padding: 10px 14px; border: 1px solid var(--maroon); border-radius: 6px;
+    background: #fff; color: var(--maroon); font-weight: 600; font-size: 0.9rem; cursor: pointer; text-align: center;
+    font-family: inherit;
+  }
+  .action-grid button:hover { background: var(--maroon); color: #fff; }
+  #submitBtn { background: var(--maroon); color: #fff; }
+  #submitBtn:hover { background: var(--maroon-dark); }
+
+  .panel { display: none; margin-top: 16px; padding: 14px 16px; background: #f7f2f2; border-left: 4px solid var(--maroon); border-radius: 4px; }
+  .panel.open { display: block; }
+  .panel label { display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 5px; }
+  .panel input { width: 100%; padding: 7px 9px; border: 1px solid #bbb; border-radius: 5px; box-sizing: border-box; margin-bottom: 10px; }
+  .panel button { padding: 7px 16px; border: none; border-radius: 5px; background: #10b981; color: #fff; cursor: pointer; font-size: 0.85rem; }
+
+  #status { margin-top: 16px; font-size: 0.88rem; min-height: 1.2em; }
+
+  @media (max-width: 480px) {
+    body { padding: 12px; }
+    .card { padding: 20px 18px 28px; }
+    .action-grid { grid-template-columns: 1fr; }
+    .case-box .row { flex-direction: column; align-items: stretch; }
+    .case-box .row label { min-width: 0; }
+    .logout-link { position: static; display: block; margin-bottom: 10px; text-align: right; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="header">
+    <a class="logout-link" th:href="@{/logout}" href="/logout">Log out</a>
+    <img th:src="@{/images/pnguot-logo.jpg}" src="/images/pnguot-logo.jpg" alt="PNGUOT logo">
+    <h1>STUDENT SUPPORT REQUEST FORM</h1>
+    <p style="font-size:0.8rem; color:#666; margin:6px 0 0;"><a th:href="@{/student-dashboard}" href="/student-dashboard" style="color:var(--maroon);">&larr; Back to Dashboard</a></p>
+  </div>
+
+  <input type="hidden" id="requestId">
+
+  <div class="case-box">
+    <div class="row">
+      <label>Case No:</label>
+      <span id="caseNumberDisplay" style="font-size:0.92rem; color:#333;">assigned automatically on submit</span>
+    </div>
+    <div class="row">
+      <label for="dateSubmitted">Date:</label>
+      <input type="date" id="dateSubmitted">
+    </div>
+    <div class="row">
+      <label for="reportedAt">Reported at:</label>
+      <select id="reportedAt">
+        <option value="TARAKA">Taraka Campus (Main)</option>
+        <option value="BULOLO">Bulolo University College</option>
+        <option value="BUMBU">Bumbu Campus</option>
+        <option value="KUNDIAWA">Kundiawa Campus</option>
+        <option value="TFTC">Timber and Forestry College (TFTC)</option>
+        <option value="OKARI">Okari Campus</option>
+        <option value="ONLINE">Online / Distance</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="issueCategory">Issue:</label>
+      <select id="issueCategory">
+        <option value="MENTAL_HEALTH">Mental Health</option>
+        <option value="ANXIETY">Anxiety</option>
+        <option value="DEPRESSION">Depression</option>
+        <option value="ABUSE">Abuse</option>
+        <option value="BULLYING">Bullying</option>
+        <option value="FIGHTING">Fighting</option>
+        <option value="ACADEMIC_STRESS">Academic Stress</option>
+        <option value="OTHER">Other</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="urgencyLevel">Urgency:</label>
+      <select id="urgencyLevel">
+        <option value="LOW">Low urgency</option>
+        <option value="MEDIUM">Medium urgency</option>
+        <option value="HIGH">High urgency</option>
+        <option value="CRITICAL">Critical</option>
+      </select>
+      <select id="priorityLevel">
+        <option value="LOW">Low priority</option>
+        <option value="MEDIUM">Medium priority</option>
+        <option value="HIGH">High priority</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="description-field">
+    <label class="desc-label" for="description">Description</label>
+    <textarea id="description" placeholder="Describe what's going on..."></textarea>
+  </div>
+
+  <div class="action-grid">
+    <button type="button" id="editBtn" onclick="editRequest()">Edit</button>
+    <button type="button" id="submitBtn" onclick="submitRequest()">Save &amp; Submit</button>
+    <button type="button" id="cancelBtn" onclick="cancelRequest()">Cancel</button>
+    <button type="button" id="scheduleToggle" onclick="togglePanel('schedulePanel')">Request Schedule</button>
+  </div>
+
+  <div class="panel" id="schedulePanel">
+    <label for="scheduleDate">Requested schedule date &amp; time</label>
+    <input type="datetime-local" id="scheduleDate">
+    <button type="button" onclick="scheduleFollowUp()">Save Schedule</button>
+  </div>
+
+  <div id="status"></div>
+  <footer style="margin-top:34px; padding-top:16px; border-top:1px solid #eee; text-align:center; font-size:0.75rem; color:#999;">Papua New Guinea University of Technology — Student &amp; Staff Support Hub</footer>
+</div>
+
+<script>
+const API = '/api/support-requests';
+
+function showStatus(msg, isError) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.style.color = isError ? '#dc2626' : '#16a34a';
+}
+
+function togglePanel(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+async function submitRequest() {
+  const body = {
+    reportedAt: document.getElementById('reportedAt').value,
+    description: document.getElementById('description').value,
+    issueCategory: document.getElementById('issueCategory').value,
+    urgencyLevel: document.getElementById('urgencyLevel').value,
+    priorityLevel: document.getElementById('priorityLevel').value
+  };
+  const res = await fetch(API, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (!res.ok) { showStatus('Something went wrong submitting your request.', true); return; }
+  const saved = await res.json();
+  document.getElementById('requestId').value = saved.id;
+  document.getElementById('caseNumberDisplay').textContent = saved.caseNumber;
+  document.getElementById('dateSubmitted').value = saved.dateSubmitted;
+  showStatus('Submitted as ' + saved.caseNumber + '. You can still Edit, Cancel, or Request a Schedule below.');
+}
+
+async function editRequest() {
+  const id = document.getElementById('requestId').value;
+  if (!id) { showStatus('Submit a request first before editing it.', true); return; }
+  const body = {
+    reportedAt: document.getElementById('reportedAt').value,
+    description: document.getElementById('description').value,
+    issueCategory: document.getElementById('issueCategory').value,
+    urgencyLevel: document.getElementById('urgencyLevel').value,
+    priorityLevel: document.getElementById('priorityLevel').value
+  };
+  const res = await fetch(`${API}/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (!res.ok) { showStatus('Could not save changes.', true); return; }
+  showStatus('Changes saved.');
+}
+
+async function cancelRequest() {
+  const id = document.getElementById('requestId').value;
+  if (!id) { showStatus('Submit a request first before cancelling it.', true); return; }
+  const res = await fetch(`${API}/${id}/cancel`, { method: 'PATCH' });
+  if (!res.ok) { showStatus('Could not cancel this request.', true); return; }
+  showStatus('Request cancelled.');
+}
+
+async function scheduleFollowUp() {
+  const id = document.getElementById('requestId').value;
+  const scheduleDate = document.getElementById('scheduleDate').value;
+  if (!id || !scheduleDate) { showStatus('Submit a request and pick a date/time first.', true); return; }
+  const res = await fetch(`${API}/${id}/schedule`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ scheduleDate: scheduleDate + ':00' }) });
+  if (!res.ok) { showStatus('Could not save that schedule request.', true); return; }
+  showStatus('Schedule request sent.');
+}
+</script>
+ <script>
+ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }
+ </script>
+</body>
+</html>

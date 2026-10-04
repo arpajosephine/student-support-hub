@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json"> <meta name="theme-color" content="#7a1f2b"> <link rel="apple-touch-icon" href="/icons/icon-192.png">
+<title>Student Support Hub — PNGUOT</title>
+<style>
+  :root {
+    --bg: #f4f6f8; --panel: #ffffff; --border: #e5e2e3;
+    --text: #222; --text-muted: #6b6b6b;
+    --maroon: #7a1f2b; --maroon-dark: #5e1620; --gold: #d9a441;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 26px 60px; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; border-bottom: 1px solid var(--border); }
+  .topbar .brand { display: flex; align-items: center; gap: 12px; }
+  .topbar img { height: 38px; border-radius: 6px; }
+  .topbar .brand-text .name { font-weight: 700; font-size: 0.95rem; }
+  .topbar .brand-text .sub { font-size: 0.78rem; color: var(--text-muted); }
+  .pill-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 999px;
+    font-weight: 700; font-size: 0.88rem; text-decoration: none; border: none; cursor: pointer; font-family: inherit;
+  }
+  .pill-btn.primary { background: var(--maroon); color: #fff; }
+  .pill-btn.primary:hover { background: var(--maroon-dark); }
+  .pill-btn.secondary { background: #fff; color: var(--maroon); border: 1px solid var(--maroon); }
+  .pill-btn.secondary:hover { background: var(--maroon); color: #fff; }
+  .pill-btn.ghost { background: #fff; color: var(--text); border: 1px solid var(--border); font-size: 0.8rem; padding: 8px 16px; }
+  .pill-btn.ghost:hover { border-color: var(--maroon); color: var(--maroon); }
+
+  .hero { padding: 46px 0 10px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--border);
+    border-radius: 999px; padding: 7px 16px; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 22px;
+  }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); display: inline-block; }
+  .hero h1 { font-size: 2.3rem; line-height: 1.15; margin: 0 0 18px; font-weight: 800; color: var(--maroon); }
+  .hero p.lead { font-size: 1.02rem; color: var(--text-muted); line-height: 1.6; max-width: 560px; margin: 0 0 30px; }
+
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+  .fine-print { font-size: 0.85rem; color: var(--text-muted); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 46px 0 36px; }
+
+  .section h2 { font-size: 1.4rem; margin: 0 0 8px; font-weight: 800; color: var(--text); }
+  .section p.sub { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; max-width: 560px; margin: 0 0 30px; }
+
+  .steps { display: flex; flex-direction: column; gap: 18px; }
+  .step { display: flex; gap: 16px; align-items: flex-start; }
+  .step .num {
+    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 1px solid var(--maroon);
+    display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: var(--maroon);
+  }
+  .step .step-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 3px; }
+  .step .step-desc { color: var(--text-muted); font-size: 0.88rem; line-height: 1.5; }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 0 18px 40px; }
+    .hero h1 { font-size: 1.8rem; }
+    .cta-row { flex-direction: column; }
+    .pill-btn.primary, .pill-btn.secondary { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <img th:src="@{/images/pnguot-logo.jpg}" src="/images/pnguot-logo.jpg" alt="PNGUOT logo">
+      <div class="brand-text">
+        <div class="name">Papua New Guinea University of Technology</div>
+        <div class="sub">Student &amp; Staff Support Hub</div>
+      </div>
+    </div>
+    <a class="pill-btn ghost" th:href="@{/logout}" href="/logout">Log out</a>
+  </div>
+
+  <div class="hero">
+    <div class="badge"><span class="dot"></span> Confidential &amp; Secure</div>
+    <h1>Student Support Hub</h1>
+    <p class="lead">
+      A confidential space to report what you're going through — academic stress, mental health,
+      bullying, or anything else — and get connected with a PNGUOT counsellor. Submit your case,
+      track its status, and request a session, entirely online.
+    </p>
+    <div class="cta-row">
+      <a class="pill-btn primary" th:href="@{/student-request-form}" href="/student-request-form">New Support Request →</a>
+      <a class="pill-btn secondary" href="#how-it-works">How it works</a>
+    </div>
+    <p class="fine-print">Open to enrolled students of Papua New Guinea University of Technology.</p>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section" id="how-it-works">
+    <h2>How it works</h2>
+    <p class="sub">Four steps from submission to resolution. A counsellor reviews every case personally.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <div>
+          <div class="step-title">Submit your request</div>
+          <div class="step-desc">Fill out a confidential form describing your situation — a case number is generated automatically.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <div>
+          <div class="step-title">Counsellor reviews</div>
+          <div class="step-desc">Your case is triaged by urgency and reviewed by one of PNGUOT's counsellors.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <div>
+          <div class="step-title">Session scheduled</div>
+          <div class="step-desc">You can request a time to talk, or a counsellor will reach out to arrange one.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <div>
+          <div class="step-title">Case resolved</div>
+          <div class="step-desc">Your case stays tracked and confidential until it's closed.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer style="margin-top:40px; padding-top:20px; border-top:1px solid var(--border); text-align:center; font-size:0.78rem; color:var(--text-muted);">Papua New Guinea University of Technology — Student &amp; Staff Support Hub</footer>
+</div>
+ <script>
+ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }
+ </script>
+</body>
+</html>
